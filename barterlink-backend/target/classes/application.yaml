@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: barterlink-backend
+  profiles:
+    active: dev
+
+server:
+  port: 8084
