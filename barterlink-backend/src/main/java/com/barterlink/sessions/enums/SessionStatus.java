@@ -4,6 +4,8 @@ public enum SessionStatus {
 
     CREATED,
 
+    SCHEDULED,
+
     IN_PROGRESS,
 
     PROVIDER_CONFIRMED,

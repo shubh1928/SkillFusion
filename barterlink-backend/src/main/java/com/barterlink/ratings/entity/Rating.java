@@ -1,9 +1,9 @@
 package com.barterlink.ratings.entity;
 
-import com.barterlink.agreements.entity.ServiceAgreement;
 import com.barterlink.auth.entities.User;
+import com.barterlink.ratings.enums.RatingType;
+import com.barterlink.sessions.entity.ServiceSession;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.Instant;
@@ -16,47 +16,63 @@ import java.util.UUID;
 @Builder
 
 @Entity
-@Table(name = "ratings")
+@Table(
+        name = "ratings",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        columnNames = {
+                                "session_id",
+                                "rated_by"
+                        }
+                )
+        }
+)
 public class Rating {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "rating_id",
+    @Column(
+            name = "rating_id",
             nullable = false,
-            updatable = false)
+            updatable = false
+    )
     private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-            name = "agreement_id",
-            nullable = false,
-            unique = true
+            name = "session_id",
+            nullable = false
     )
-    private ServiceAgreement agreement;
+    private ServiceSession session;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-            name = "provider_id",
+            name = "rated_by",
             nullable = false
     )
-    private User provider;
+    private User ratedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-            name = "reviewer_id",
+            name = "rated_user",
             nullable = false
     )
-    private User reviewer;
+    private User ratedUser;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RatingType ratingType;
 
     @Column(nullable = false)
     private Integer stars;
 
     @Column(columnDefinition = "TEXT")
-    @Size(max = 1000)
     private String review;
 
-    @Column(nullable = false,
-            updatable = false)
+    @Column(
+            nullable = false,
+            updatable = false
+    )
     private Instant createdAt;
 
     @PrePersist

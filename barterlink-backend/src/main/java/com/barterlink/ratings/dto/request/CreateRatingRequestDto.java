@@ -12,12 +12,12 @@ import java.util.UUID;
 @Setter
 public class CreateRatingRequestDto {
 
-    @NotNull(message = "Agreement ID is required")
-    private UUID agreementId;
+    @NotNull
+    private UUID sessionId;
 
-    @NotNull(message = "Rating is required")
-    @Min(value = 1, message = "Rating must be at least 1")
-    @Max(value = 5, message = "Rating must be at most 5")
+    @NotNull
+    @Min(1)
+    @Max(5)
     private Integer stars;
 
     private String review;

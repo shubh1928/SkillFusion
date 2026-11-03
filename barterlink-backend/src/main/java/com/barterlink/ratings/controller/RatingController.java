@@ -31,21 +31,34 @@ public class RatingController {
                         request));
     }
 
-    @GetMapping("/provider/{providerId}")
-    public ApiResponse<List<RatingResponseDto>> getProviderRatings(
-            @PathVariable UUID providerId) {
+    @GetMapping("/user/{userId}")
+    public ApiResponse<List<RatingResponseDto>> getUserRatings(
+            @PathVariable UUID userId) {
 
         return ApiResponse.success(
-                ratingService.getProviderRatings(
-                        providerId));
+                ratingService.getUserRatings(userId));
     }
 
-    @GetMapping("/provider/{providerId}/reputation")
-    public ApiResponse<Double> getProviderReputation(
-            @PathVariable UUID providerId) {
+    @GetMapping("/user/{userId}/reputation")
+    public ApiResponse<Double> getReputation(
+            @PathVariable UUID userId) {
 
         return ApiResponse.success(
-                ratingService.calculateReputation(
-                        providerId));
+                ratingService.calculateReputation(userId));
+    }
+
+    @GetMapping("/session/{sessionId}/status")
+    public ApiResponse<Boolean> hasCurrentUserRated(
+            @PathVariable UUID sessionId
+    ) {
+
+        return ApiResponse.success(
+
+                ratingService.hasCurrentUserRated(
+                        currentUserUtil.getCurrentUserId(),
+                        sessionId
+                )
+
+        );
     }
 }

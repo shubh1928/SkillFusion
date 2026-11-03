@@ -9,12 +9,16 @@ import java.util.UUID;
 public interface RatingService {
 
     RatingResponseDto submitRating(
-            UUID reviewerId,
+            UUID currentUserId,
             CreateRatingRequestDto request);
 
-    List<RatingResponseDto> getProviderRatings(
-            UUID providerId);
+    List<RatingResponseDto> getUserRatings(
+            UUID userId);
 
     Double calculateReputation(
-            UUID providerId);
+            UUID userId);
+
+    Boolean hasCurrentUserRated(
+            UUID currentUserId,
+            UUID sessionId);
 }

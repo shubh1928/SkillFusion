@@ -1,8 +1,5 @@
 package com.barterlink.ratings.service.impl;
 
-import com.barterlink.agreements.entity.ServiceAgreement;
-import com.barterlink.agreements.enums.AgreementStatus;
-import com.barterlink.agreements.repository.AgreementRepository;
 import com.barterlink.auth.entities.User;
 import com.barterlink.auth.repositories.UserRepository;
 import com.barterlink.common.exception.BusinessException;
@@ -10,69 +7,114 @@ import com.barterlink.common.exception.ResourceNotFoundException;
 import com.barterlink.ratings.dto.request.CreateRatingRequestDto;
 import com.barterlink.ratings.dto.response.RatingResponseDto;
 import com.barterlink.ratings.entity.Rating;
+import com.barterlink.ratings.enums.RatingType;
 import com.barterlink.ratings.repository.RatingRepository;
 import com.barterlink.ratings.service.RatingService;
+import com.barterlink.reputation.service.ReputationService;
+import com.barterlink.sessions.entity.ServiceSession;
+import com.barterlink.sessions.enums.SessionStatus;
+import com.barterlink.sessions.repository.ServiceSessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.barterlink.notifications.enums.NotificationType;
+import com.barterlink.notifications.service.NotificationService;
+import com.barterlink.ai.service.TrustAssessmentService;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class RatingServiceImpl implements RatingService {
+@Transactional
+public class RatingServiceImpl
+        implements RatingService {
 
     private final RatingRepository ratingRepository;
-    private final AgreementRepository agreementRepository;
+    private final ServiceSessionRepository sessionRepository;
     private final UserRepository userRepository;
+    private final ReputationService reputationService;
+    private final NotificationService notificationService;
+    private final TrustAssessmentService trustAssessmentService;
 
-    @Transactional
     @Override
     public RatingResponseDto submitRating(
-            UUID reviewerId,
+            UUID currentUserId,
             CreateRatingRequestDto request) {
 
-        ServiceAgreement agreement =
-                agreementRepository.findById(
-                                request.getAgreementId())
+        ServiceSession session =
+                sessionRepository.findById(
+                                request.getSessionId())
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
-                                        "Agreement not found"));
+                                        "Session not found"));
 
-        if (agreement.getStatus()
-                != AgreementStatus.COMPLETED) {
-
-            throw new BusinessException(
-                    "Agreement is not completed");
-        }
-
-        if (ratingRepository.existsByAgreement(
-                agreement)) {
+        if (session.getStatus()
+                != SessionStatus.COMPLETED) {
 
             throw new BusinessException(
-                    "Rating already submitted");
+                    "Session is not completed");
         }
 
-        User reviewer =
-                userRepository.findById(reviewerId)
+        User currentUser =
+                userRepository.findById(currentUserId)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
-                                        "Reviewer not found"));
+                                        "User not found"));
 
-        if (!agreement.getRequester()
-                .getId()
-                .equals(reviewerId)) {
+        UUID requesterId =
+                session.getAgreement()
+                        .getRequester()
+                        .getId();
+
+        UUID providerId =
+                session.getAgreement()
+                        .getProvider()
+                        .getId();
+
+        if (!requesterId.equals(currentUserId)
+                && !providerId.equals(currentUserId)) {
 
             throw new BusinessException(
-                    "Only requester can submit rating");
+                    "You are not part of this session");
+        }
+
+        if (ratingRepository.findBySessionAndRatedBy(
+                session,
+                currentUser).isPresent()) {
+
+            throw new BusinessException(
+                    "You have already submitted a rating.");
+        }
+
+        User ratedUser;
+        RatingType ratingType;
+
+        if (requesterId.equals(currentUserId)) {
+
+            ratedUser =
+                    session.getAgreement()
+                            .getProvider();
+
+            ratingType =
+                    RatingType.REQUESTER_TO_PROVIDER;
+
+        } else {
+
+            ratedUser =
+                    session.getAgreement()
+                            .getRequester();
+
+            ratingType =
+                    RatingType.PROVIDER_TO_REQUESTER;
         }
 
         Rating rating =
                 Rating.builder()
-                        .agreement(agreement)
-                        .provider(agreement.getProvider())
-                        .reviewer(reviewer)
+                        .session(session)
+                        .ratedBy(currentUser)
+                        .ratedUser(ratedUser)
+                        .ratingType(ratingType)
                         .stars(request.getStars())
                         .review(request.getReview())
                         .build();
@@ -80,40 +122,59 @@ public class RatingServiceImpl implements RatingService {
         Rating savedRating =
                 ratingRepository.save(rating);
 
-        updateProviderReputation(
-                agreement.getProvider());
+        reputationService.recalculateReputation(
+                ratedUser.getId());
+
+        try {
+
+            trustAssessmentService.refreshAssessment(
+                    ratedUser.getId());
+
+        } catch (Exception ex) {
+
+            ex.printStackTrace();
+        }
+
+        notificationService.createNotification(
+                ratedUser.getId(),
+                NotificationType.RATING,
+                "New Rating Received",
+                currentUser.getName()
+                        + " rated your completed service.");
 
         return mapToResponse(savedRating);
     }
 
     @Override
-    public List<RatingResponseDto> getProviderRatings(
-            UUID providerId) {
+    @Transactional(readOnly = true)
+    public List<RatingResponseDto> getUserRatings(
+            UUID userId) {
 
-        User provider =
-                userRepository.findById(providerId)
+        User user =
+                userRepository.findById(userId)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
-                                        "Provider not found"));
+                                        "User not found"));
 
-        return ratingRepository.findByProvider(provider)
+        return ratingRepository.findByRatedUser(user)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Double calculateReputation(
-            UUID providerId) {
+            UUID userId) {
 
-        User provider =
-                userRepository.findById(providerId)
+        User user =
+                userRepository.findById(userId)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
-                                        "Provider not found"));
+                                        "User not found"));
 
         List<Rating> ratings =
-                ratingRepository.findByProvider(provider);
+                ratingRepository.findByRatedUser(user);
 
         if (ratings.isEmpty()) {
             return 0.0;
@@ -125,25 +186,31 @@ public class RatingServiceImpl implements RatingService {
                 .orElse(0.0);
     }
 
-    private void updateProviderReputation(
-            User provider) {
+    @Override
+    @Transactional(readOnly = true)
+    public Boolean hasCurrentUserRated(
+            UUID currentUserId,
+            UUID sessionId
+    ) {
 
-        List<Rating> ratings =
-                ratingRepository.findByProvider(provider);
+        ServiceSession session =
+                sessionRepository.findById(sessionId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Session not found"));
 
-        double averageRating =
-                ratings.stream()
-                        .mapToInt(Rating::getStars)
-                        .average()
-                        .orElse(0.0);
+        User currentUser =
+                userRepository.findById(currentUserId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "User not found"));
 
-        provider.setReputationScore(
-                Math.round(averageRating * 10.0) / 10.0);
-
-        provider.setTotalRatings(
-                ratings.size());
-
-        userRepository.save(provider);
+        return ratingRepository
+                .findBySessionAndRatedBy(
+                        session,
+                        currentUser
+                )
+                .isPresent();
     }
 
     private RatingResponseDto mapToResponse(
@@ -155,20 +222,23 @@ public class RatingServiceImpl implements RatingService {
         dto.setRatingId(
                 rating.getId());
 
-        dto.setAgreementId(
-                rating.getAgreement().getId());
+        dto.setSessionId(
+                rating.getSession().getId());
 
-        dto.setProviderId(
-                rating.getProvider().getId());
+        dto.setRatedById(
+                rating.getRatedBy().getId());
 
-        dto.setProviderName(
-                rating.getProvider().getName());
+        dto.setRatedByName(
+                rating.getRatedBy().getName());
 
-        dto.setReviewerId(
-                rating.getReviewer().getId());
+        dto.setRatedUserId(
+                rating.getRatedUser().getId());
 
-        dto.setReviewerName(
-                rating.getReviewer().getName());
+        dto.setRatedUserName(
+                rating.getRatedUser().getName());
+
+        dto.setRatingType(
+                rating.getRatingType());
 
         dto.setStars(
                 rating.getStars());
@@ -181,4 +251,5 @@ public class RatingServiceImpl implements RatingService {
 
         return dto;
     }
+
 }

@@ -1,5 +1,6 @@
 package com.barterlink.ratings.dto.response;
 
+import com.barterlink.ratings.enums.RatingType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,15 +13,17 @@ public class RatingResponseDto {
 
     private UUID ratingId;
 
-    private UUID agreementId;
+    private UUID sessionId;
 
-    private UUID providerId;
+    private UUID ratedById;
 
-    private String providerName;
+    private String ratedByName;
 
-    private UUID reviewerId;
+    private UUID ratedUserId;
 
-    private String reviewerName;
+    private String ratedUserName;
+
+    private RatingType ratingType;
 
     private Integer stars;
 
