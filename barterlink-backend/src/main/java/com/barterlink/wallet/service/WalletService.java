@@ -12,6 +12,8 @@ public interface WalletService {
 
     WalletResponseDto initializeWallet(UUID userId);
 
+    void grantSignupBonus(UUID userId);
+
     WalletResponseDto getWallet(UUID userId);
 
     WalletSummaryDto getWalletSummary(UUID userId);

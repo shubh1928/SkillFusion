@@ -77,6 +77,12 @@ public class SkillServiceImpl implements SkillService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("User not found"));
 
+        if (isUnavailableForMarketplace(user)) {
+            throw new ConflictException(
+                    "Cannot add skills to a disabled account."
+            );
+        }
+
         Skill skill = skillRepository.findById(request.getSkillId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Skill not found"));
@@ -100,6 +106,10 @@ public class SkillServiceImpl implements SkillService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("User not found"));
+
+        if (isUnavailableForMarketplace(user)) {
+            throw new ResourceNotFoundException("User not found");
+        }
 
         return userSkillRepository.findByUser(user)
                 .stream()
@@ -136,6 +146,12 @@ public class SkillServiceImpl implements SkillService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("User not found"));
 
+        if (isUnavailableForMarketplace(user)) {
+            throw new ConflictException(
+                    "Cannot modify skills for a disabled account."
+            );
+        }
+
         Skill skill = skillRepository.findById(skillId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Skill not found"));
@@ -148,4 +164,11 @@ public class SkillServiceImpl implements SkillService {
 
         userSkillRepository.delete(userSkill);
     }
+
+    private boolean isUnavailableForMarketplace(User user) {
+        return !user.isEnabled()
+                || user.getInactivityDeactivatedAt() != null
+                || user.getAnonymizedAt() != null;
+    }
+
 }

@@ -30,6 +30,30 @@ public class Wallet {
     )
     private User user;
 
+    /*
+     * Blockchain wallet information.
+     *
+     * These fields are nullable for now because existing wallet
+     * records may already exist without blockchain information.
+     * They will be populated when the blockchain wallet is created.
+     */
+    @Column(
+            name = "blockchain_address",
+            length = 42,
+            unique = true
+    )
+    private String blockchainAddress;
+
+    @Lob
+    @Column(name = "encrypted_private_key")
+    private String encryptedPrivateKey;
+
+    @Column(
+            name = "private_key_iv",
+            length = 24
+    )
+    private String privateKeyIv;
+
     @Builder.Default
     @Column(nullable = false)
     private Integer availableTokens = 0;

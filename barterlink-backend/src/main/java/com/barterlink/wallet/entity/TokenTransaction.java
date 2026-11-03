@@ -3,7 +3,7 @@ package com.barterlink.wallet.entity;
 import com.barterlink.wallet.enums.TransactionType;
 import jakarta.persistence.*;
 import lombok.*;
-
+import com.barterlink.rewards.entity.RewardClaim;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -38,6 +38,14 @@ public class TokenTransaction {
 
     @Column(length = 500)
     private String description;
+
+    /**
+     * Unique link for a reward ledger credit.
+     * This is not used as a human-readable idempotency key.
+     */
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reward_claim_id", unique = true)
+    private RewardClaim rewardClaim;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;

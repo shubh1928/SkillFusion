@@ -13,7 +13,8 @@ import java.util.UUID;
 
 @EnableJpaAuditing
 @SpringBootApplication
-public class BarterLinkApplication implements CommandLineRunner {
+public class
+BarterLinkApplication implements CommandLineRunner {
 
 	@Autowired
 	private RoleRepository roleRepository;

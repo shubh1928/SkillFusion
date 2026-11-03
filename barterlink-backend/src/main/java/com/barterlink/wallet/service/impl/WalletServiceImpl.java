@@ -17,6 +17,8 @@ import com.barterlink.wallet.service.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.barterlink.blockchain.wallet.BlockchainWalletProvisioningService;
+import com.barterlink.blockchain.token.BlockchainTokenService;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,7 +30,10 @@ public class WalletServiceImpl implements WalletService {
     private final WalletRepository walletRepository;
     private final TokenTransactionRepository tokenTransactionRepository;
     private final UserRepository userRepository;
+    private final BlockchainWalletProvisioningService blockchainWalletProvisioningService;
+    private final BlockchainTokenService blockchainTokenService;
 
+    @Transactional
     @Override
     public WalletResponseDto initializeWallet(UUID userId) {
 
@@ -48,12 +53,40 @@ public class WalletServiceImpl implements WalletService {
 
         Wallet savedWallet = walletRepository.save(wallet);
 
+        /*
+         * Create the user's blockchain wallet and securely persist
+         * the blockchain address, encrypted private key and IV.
+         */
+        blockchainWalletProvisioningService.provisionWallet(
+                userId
+        );
+
         WalletResponseDto dto = new WalletResponseDto();
         dto.setWalletId(savedWallet.getId());
         dto.setAvailableTokens(savedWallet.getAvailableTokens());
         dto.setLockedTokens(savedWallet.getLockedTokens());
 
         return dto;
+    }
+
+    @Transactional
+    @Override
+    public void grantSignupBonus(UUID userId) {
+
+        Wallet wallet = getWalletEntity(userId);
+
+        if (wallet.getBlockchainAddress() == null
+                || wallet.getBlockchainAddress().isBlank()) {
+            throw new BusinessException(
+                    "Blockchain wallet is not provisioned");
+        }
+
+        blockchainTokenService.mintSignupBonus(wallet);
+
+        addBonusTokens(
+                userId,
+                WalletConstants.SIGNUP_BONUS,
+                "Signup Bonus");
     }
 
     @Override
@@ -137,7 +170,9 @@ public class WalletServiceImpl implements WalletService {
             Integer amount,
             String description) {
 
-        Wallet wallet = getWalletEntity(userId);
+        Wallet wallet = walletRepository.findByUserIdForUpdate(userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Wallet not found"));
 
         if (wallet.getAvailableTokens() < amount) {
             throw new BusinessException(
@@ -195,9 +230,22 @@ public class WalletServiceImpl implements WalletService {
             Integer amount,
             String description) {
 
-        Wallet wallet = getWalletEntity(userId);
+        if (userId == null) {
+            throw new BusinessException(
+                    "User ID is required for a refund");
+        }
 
-        if (wallet.getLockedTokens() < amount) {
+        if (amount == null || amount <= 0) {
+            throw new BusinessException(
+                    "Refund amount must be greater than zero");
+        }
+
+        Wallet wallet = walletRepository.findByUserIdForUpdate(userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Wallet not found"));
+
+        if (wallet.getLockedTokens() == null
+                || wallet.getLockedTokens() < amount) {
             throw new BusinessException(
                     "Insufficient locked balance");
         }
@@ -272,11 +320,56 @@ public class WalletServiceImpl implements WalletService {
             Integer amount,
             String description) {
 
+        if (requesterId == null || providerId == null) {
+            throw new BusinessException(
+                    "Requester and provider are required");
+        }
+
+        if (requesterId.equals(providerId)) {
+            throw new BusinessException(
+                    "Requester and provider must be different users");
+        }
+
+        if (amount == null || amount <= 0) {
+            throw new BusinessException(
+                    "Transfer amount must be greater than zero");
+        }
+
+        /*
+         * Always acquire wallet locks in the same UUID order
+         * to reduce the risk of deadlocks between concurrent transfers.
+         */
+        UUID firstUserId =
+                requesterId.compareTo(providerId) < 0
+                        ? requesterId
+                        : providerId;
+
+        UUID secondUserId =
+                requesterId.equals(firstUserId)
+                        ? providerId
+                        : requesterId;
+
+        Wallet firstWallet =
+                walletRepository.findByUserIdForUpdate(firstUserId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Wallet not found"));
+
+        Wallet secondWallet =
+                walletRepository.findByUserIdForUpdate(secondUserId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Wallet not found"));
+
         Wallet requesterWallet =
-                getWalletEntity(requesterId);
+                requesterId.equals(firstUserId)
+                        ? firstWallet
+                        : secondWallet;
 
         Wallet providerWallet =
-                getWalletEntity(providerId);
+                providerId.equals(firstUserId)
+                        ? firstWallet
+                        : secondWallet;
 
         if (requesterWallet.getLockedTokens() < amount) {
             throw new BusinessException(
