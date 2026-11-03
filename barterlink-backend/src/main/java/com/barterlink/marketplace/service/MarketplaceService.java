@@ -20,12 +20,7 @@ public interface MarketplaceService {
     List<ServiceRequestResponseDto> getMyRequests(
             UUID requesterId);
 
-    List<ServiceRequestResponseDto> getAssignedRequests(
-            UUID providerId);
 
-    ServiceRequestResponseDto acceptRequest(
-            UUID requestId,
-            UUID providerId);
 
     void cancelRequest(
             UUID requestId,

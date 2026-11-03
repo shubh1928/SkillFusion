@@ -8,6 +8,8 @@ import com.barterlink.marketplace.service.MarketplaceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import com.barterlink.auth.services.UserActivityService;
+import com.barterlink.rewards.enums.RewardQualifyingActivityType;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,17 +21,25 @@ public class MarketplaceController {
 
     private final MarketplaceService marketplaceService;
     private final CurrentUserUtil currentUserUtil;
+    private final UserActivityService userActivityService;
+
 
     @PostMapping("/requests")
     public ApiResponse<ServiceRequestResponseDto> createRequest(
             @Valid @RequestBody CreateServiceRequestDto dto) {
 
-        return ApiResponse.success(
-                "Request created successfully",
+        ServiceRequestResponseDto createdRequest =
                 marketplaceService.createRequest(
                         currentUserUtil.getCurrentUserId(),
-                        dto));
+                        dto
+                );
+
+        return ApiResponse.success(
+                "Request created successfully",
+                createdRequest
+        );
     }
+
 
     @GetMapping("/requests")
     public ApiResponse<List<ServiceRequestResponseDto>> getOpenRequests() {
@@ -54,24 +64,7 @@ public class MarketplaceController {
                         currentUserUtil.getCurrentUserId()));
     }
 
-    @GetMapping("/requests/assigned")
-    public ApiResponse<List<ServiceRequestResponseDto>> getAssignedRequests() {
 
-        return ApiResponse.success(
-                marketplaceService.getAssignedRequests(
-                        currentUserUtil.getCurrentUserId()));
-    }
-
-    @PostMapping("/requests/{requestId}/accept")
-    public ApiResponse<ServiceRequestResponseDto> acceptRequest(
-            @PathVariable UUID requestId) {
-
-        return ApiResponse.success(
-                "Request accepted successfully",
-                marketplaceService.acceptRequest(
-                        requestId,
-                        currentUserUtil.getCurrentUserId()));
-    }
 
     @PostMapping("/requests/{requestId}/cancel")
     public ApiResponse<Void> cancelRequest(
@@ -79,9 +72,15 @@ public class MarketplaceController {
 
         marketplaceService.cancelRequest(
                 requestId,
-                currentUserUtil.getCurrentUserId());
+                currentUserUtil.getCurrentUserId()
+        );
+
+        // Record activity only after cancellation succeeds.
+        userActivityService.recordCurrentUserActivity();
 
         return ApiResponse.success(
-                "Request cancelled successfully");
+                "Request cancelled successfully"
+        );
     }
+
 }

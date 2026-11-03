@@ -1,10 +1,13 @@
 package com.barterlink.marketplace.dto.response;
 
+import com.barterlink.ai.dto.TrustAssessmentSummaryDto;
+import com.barterlink.marketplace.enums.ExchangeMode;
 import com.barterlink.marketplace.enums.ServiceRequestStatus;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -17,21 +20,31 @@ public class ServiceRequestResponseDto {
 
     private String requesterName;
 
-    private UUID selectedProviderId;
-
-    private String selectedProviderName;
-
     private String title;
-
-    private String description;
 
     private Integer estimatedHours;
 
-    private Integer tokenCost;
+    private ExchangeMode exchangeMode;
+
+    private String offerTitle;
+
+    private String offerDescription;
+
+    private String requestTitle;
+
+    private String requestDescription;
+
+    private Integer tokenAmount;
+
+    private Boolean requesterHasSufficientTokens;
 
     private Boolean selectiveRequest;
 
     private ServiceRequestStatus status;
 
     private Instant createdAt;
+
+    private List<String> requiredSkills;
+
+    private TrustAssessmentSummaryDto trustAssessment;
 }

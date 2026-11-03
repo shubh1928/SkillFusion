@@ -1,10 +1,13 @@
 package com.barterlink.marketplace.entity;
 
 import com.barterlink.auth.entities.User;
+import com.barterlink.marketplace.enums.ExchangeMode;
 import com.barterlink.marketplace.enums.ServiceRequestStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -30,22 +33,31 @@ public class ServiceRequest {
     @Column(nullable = false, length = 255)
     private String title;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String description;
-
     @Column(nullable = false)
     private Integer estimatedHours;
-
-    @Column(nullable = false)
-    private Integer tokenCost;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ServiceRequestStatus status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "selected_provider_id")
-    private User selectedProvider;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private ExchangeMode exchangeMode;
+
+    @Column(length = 255)
+    private String offerTitle;
+
+    @Column(columnDefinition = "TEXT")
+    private String offerDescription;
+
+    @Column(nullable =false, length = 255)
+    private String requestTitle;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String requestDescription;
+
+    @Column
+    private Integer tokenAmount;
 
     @Builder.Default
     @Column(nullable = false)
@@ -56,6 +68,15 @@ public class ServiceRequest {
 
     @Column(nullable = false)
     private Instant updatedAt = Instant.now();
+
+    @OneToMany(
+            mappedBy = "request",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    @Builder.Default
+    private Set<RequestSkill> requiredSkills = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {
