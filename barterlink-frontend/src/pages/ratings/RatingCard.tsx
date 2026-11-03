@@ -10,6 +10,7 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface RatingCardProps {
 
@@ -52,11 +53,20 @@ function RatingCard({
 
               <h3 className="text-lg font-semibold">
 
-                {rating.reviewerName}
+                {rating.ratedByName}
 
               </h3>
 
             </div>
+
+            <Badge
+                variant="outline"
+                className="w-fit"
+            >
+                {rating.ratingType === "REQUESTER_TO_PROVIDER"
+                    ? "Requester → Provider"
+                    : "Provider → Requester"}
+            </Badge>
 
             <div className="flex items-center gap-1">
 

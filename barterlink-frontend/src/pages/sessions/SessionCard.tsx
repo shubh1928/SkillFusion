@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   Clock,
 } from "lucide-react";
+import { useNavigate } from "react-router";
 
 import type Session from "@/models/sessions/Session";
 import SessionStatus from "@/models/sessions/SessionStatus";
@@ -13,54 +14,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 interface SessionCardProps {
-
   session: Session;
-
-  currentUserId: string;
-
-  onStart?: (sessionId: string) => void;
-
-  onProviderConfirm?: (
-    sessionId: string
-  ) => void;
-
-  onRequesterConfirm?: (
-    sessionId: string
-  ) => void;
-
-  onCancel?: (
-    sessionId: string
-  ) => void;
-
-  onDispute?: (
-    sessionId: string
-  ) => void;
-
 }
 
-function SessionCard({
+function SessionCard({ session }: SessionCardProps) {
 
-  session,
-
-  currentUserId,
-
-  onStart,
-
-  onProviderConfirm,
-
-  onRequesterConfirm,
-
-  onCancel,
-
-  onDispute,
-
-}: SessionCardProps) {
-
-  const isRequester =
-    session.requesterId === currentUserId;
-
-  const isProvider =
-    session.providerId === currentUserId;
+  const navigate = useNavigate();
 
   const statusVariant = ():
     | "default"
@@ -97,7 +56,22 @@ function SessionCard({
 
   return (
 
-    <Card className="transition-all hover:-translate-y-1 hover:shadow-lg">
+<Card
+  onClick={() => {
+
+    console.log("CARD CLICKED");
+    console.log(session.sessionId);
+
+    navigate(`/dashboard/sessions/${session.sessionId}`);
+
+  }}
+  className="
+    cursor-pointer
+    transition-all
+    hover:-translate-y-1
+    hover:shadow-lg
+  "
+>
 
       <CardContent className="space-y-6 p-6">
 
@@ -279,218 +253,39 @@ function SessionCard({
 
         </div>
 
-        {/* Footer */}
+{/* Footer */}
 
-        <div className="flex items-center justify-between border-t pt-4">
+<div className="flex items-center justify-between border-t pt-4">
 
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+    <div className="flex items-center gap-2 text-xs text-muted-foreground">
 
-            <Calendar size={16} />
+        <Calendar size={16} />
 
-            <span>
-
-              Created{" "}
-
+        <span>
+            Created{" "}
             {session.createdAt
-            ? new Date(session.createdAt).toLocaleDateString()
-            : "-"}
+                ? new Date(session.createdAt).toLocaleDateString()
+                : "-"}
+        </span>
 
-            </span>
-
-          </div>
-
-          {/* Action Buttons */}
-
-          <div className="flex flex-wrap gap-2">
-
-            {/* CREATED */}
-
-{session.status === SessionStatus.CREATED && (
-
-  <>
-
-    {isProvider && (
-
-      <Button
-        onClick={() =>
-          onStart?.(session.sessionId)
-        }
-      >
-        Start Session
-      </Button>
-
-    )}
-
-    {!isProvider && isRequester && (
-
-      <Badge variant="outline">
-
-        Waiting for Provider
-
-      </Badge>
-
-    )}
+    </div>
 
     <Button
-      variant="outline"
-      onClick={() =>
-        onDispute?.(session.sessionId)
-      }
+        variant="outline"
+        onClick={(event) => {
+
+            event.stopPropagation();
+
+            navigate(
+                `/dashboard/sessions/${session.sessionId}`
+            );
+
+        }}
     >
-      Dispute
+        View Session
     </Button>
 
-    <Button
-      variant="destructive"
-      onClick={() =>
-        onCancel?.(session.sessionId)
-      }
-    >
-      Cancel
-    </Button>
-
-  </>
-
-)}
-
-{/* IN PROGRESS */}
-
-{session.status === SessionStatus.IN_PROGRESS && (
-
-  <>
-
-    {isProvider && (
-
-      <Button
-        onClick={() =>
-          onProviderConfirm?.(
-            session.sessionId
-          )
-        }
-      >
-        Confirm Completion
-      </Button>
-
-    )}
-
-    {!isProvider && isRequester && (
-
-      <Badge variant="outline">
-
-        Waiting for Provider Confirmation
-
-      </Badge>
-
-    )}
-
-    <Button
-      variant="outline"
-      onClick={() =>
-        onDispute?.(session.sessionId)
-      }
-    >
-      Dispute
-    </Button>
-
-    <Button
-      variant="destructive"
-      onClick={() =>
-        onCancel?.(session.sessionId)
-      }
-    >
-      Cancel
-    </Button>
-
-  </>
-
-)}
-
-{/* PROVIDER CONFIRMED */}
-
-{session.status ===
-  SessionStatus.PROVIDER_CONFIRMED && (
-
-  <>
-
-    {isRequester && (
-
-      <Button
-        onClick={() =>
-          onRequesterConfirm?.(
-            session.sessionId
-          )
-        }
-      >
-        Final Confirm
-      </Button>
-
-    )}
-
-    {!isRequester && isProvider && (
-
-      <Badge variant="outline">
-
-        Waiting for Requester
-
-      </Badge>
-
-    )}
-
-    <Button
-      variant="outline"
-      onClick={() =>
-        onDispute?.(session.sessionId)
-      }
-    >
-      Dispute
-    </Button>
-
-  </>
-
-)}
-
-{/* COMPLETED */}
-
-{session.status ===
-  SessionStatus.COMPLETED && (
-
-  <Badge>
-
-    Session Completed
-
-  </Badge>
-
-)}
-
-{/* CANCELLED */}
-
-{session.status ===
-  SessionStatus.CANCELLED && (
-
-  <Badge variant="destructive">
-
-    Session Cancelled
-
-  </Badge>
-
-)}
-
-{/* DISPUTED */}
-
-{session.status ===
-  SessionStatus.DISPUTED && (
-
-  <Badge variant="destructive">
-
-    Session Disputed
-
-  </Badge>
-
-)}
-
-          </div>
-
-        </div>
+</div>
 
       </CardContent>
 

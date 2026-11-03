@@ -10,9 +10,9 @@ import {
   EyeOff,
   CheckCircle2Icon,
 } from "lucide-react";
-import type LoginData from "@/models/LoginData";
+import type LoginData from "@/models/auth/LoginData";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import useAuth from "@/auth/store";
@@ -32,6 +32,12 @@ const[error, setError] = useState<any>(null);
 const [showPassword, setShowPassword] = useState(false);
 
 const navigate = useNavigate();
+
+const [searchParams] = useSearchParams();
+
+const referrerCode =
+  searchParams.get("referrerCode")?.trim() ?? "";
+
 const login = useAuth((state) => state.login);
 
 const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -169,7 +175,7 @@ const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 
           {/* Subheading */}
           <p className="mt-4 text-gray-600 dark:text-gray-400 leading-relaxed">
-            Continue your journey of learning, teaching, and exchanging skills with the BarterLink community.
+            Continue your journey of learning, teaching, and exchanging skills with the SkillFusion community.
           </p>
 
         {/* Error */}
@@ -300,7 +306,7 @@ const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
             </div>
 
             {/* Social Buttons */}
-            <OAuth2Buttons/>
+            <OAuth2Buttons referrerCode={referrerCode} />
           </form>
         </div>
       </div>

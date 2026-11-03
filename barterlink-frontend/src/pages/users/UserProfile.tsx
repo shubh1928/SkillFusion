@@ -8,6 +8,8 @@ import {
   Chrome,
 } from "lucide-react";
 
+import ResourceSection from "@/components/profile/resources/ResourceSection";
+
 import { useNavigate } from "react-router";
 
 import useAuth from "@/auth/store";
@@ -75,7 +77,7 @@ function UserProfile() {
             </h1>
 
             <p className="mt-2 text-muted-foreground">
-              Manage your BarterLink identity and account information.
+              Manage your SkillFusion identity and account information.
             </p>
 
           </div>
@@ -392,6 +394,10 @@ function UserProfile() {
 
         </Card>
 
+        {/* Resource Library */}
+
+            <ResourceSection />
+
                 {/* Account Information */}
 
         <Card className="rounded-3xl">
@@ -405,7 +411,7 @@ function UserProfile() {
               </h2>
 
               <p className="text-muted-foreground">
-                Your BarterLink account details.
+                Your SkillFusion account details.
               </p>
 
             </div>

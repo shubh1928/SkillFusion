@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+
+import InterestedProvidersDialog
+from "./InterestedProvidersDialog";
 import useAuth from "@/auth/store";
+
+import {
+  openNegotiation,
+} from "@/services/NegotiationService";
+
+import { useNavigate } from "react-router";
 
 import {
   Plus,
@@ -11,11 +20,20 @@ import {
 import {
   getOpenRequests,
   getMyRequests,
-  getAssignedRequests,
-  acceptRequest,
   cancelRequest,
 } from "@/services/MarketplaceService";
 
+import {
+  getRecommendations,
+} from "@/services/RecommendationService";
+
+import {
+  expressInterest,
+} from "@/services/InterestService";
+
+import RequestDetailsDialog from "./RequestDetailsDialog";
+
+import InterestActionDialog from "./InterestActionDialog";
 import type ServiceRequest from "@/models/marketplace/ServiceRequest";
 
 import MarketplaceCard from "./MarketplaceCard";
@@ -31,11 +49,14 @@ import {
 type MarketplaceTab =
   | "open"
   | "my"
-  | "assigned";
+  | "recommended";
 
 function MarketplacePage() {
 
-    const user = useAuth((state) => state.user);
+  const navigate = useNavigate();
+
+  const user =
+  useAuth((state) => state.user);
 
   const [activeTab, setActiveTab] =
     useState<MarketplaceTab>("open");
@@ -46,6 +67,13 @@ function MarketplacePage() {
   const [dialogOpen, setDialogOpen] =
     useState(false);
 
+  const [selectedRequest, setSelectedRequest] =
+    useState<ServiceRequest | null>(null);
+
+  const [detailsOpen, setDetailsOpen] =
+    useState(false);
+  
+
   const [refreshing, setRefreshing] =
     useState(false);
 
@@ -55,8 +83,23 @@ function MarketplacePage() {
   const [myRequests, setMyRequests] =
     useState<ServiceRequest[]>([]);
 
-  const [assignedRequests, setAssignedRequests] =
-    useState<ServiceRequest[]>([]);
+    const [recommendedRequests, setRecommendedRequests] =
+  useState<ServiceRequest[]>([]);
+
+    const [interestDialogOpen, setInterestDialogOpen] =
+  useState(false);
+
+  const [selectedInterestRequest, setSelectedInterestRequest] =
+    useState<ServiceRequest | null>(null);
+
+    const [interestId, setInterestId] =
+     useState<string | null>(null);
+
+  const [providersDialogOpen, setProvidersDialogOpen] =
+  useState(false);
+
+const [selectedProvidersRequest, setSelectedProvidersRequest] =
+  useState<ServiceRequest | null>(null);
 
   const loadMarketplace = async () => {
 
@@ -64,21 +107,23 @@ function MarketplacePage() {
 
       setLoading(true);
 
-      const [
-        open,
-        mine,
-        assigned,
-      ] = await Promise.all([
+const [
+  open,
+  mine,
+  recommended,
+] = await Promise.all([
 
-        getOpenRequests(),
-        getMyRequests(),
-        getAssignedRequests(),
+  getOpenRequests(),
+  getMyRequests(),
+  getRecommendations(),
 
-      ]);
+]);
 
-      setOpenRequests(open);
-      setMyRequests(mine);
-      setAssignedRequests(assigned);
+setOpenRequests(open);
+
+setMyRequests(mine);
+
+setRecommendedRequests(recommended);
 
     } catch (error: any) {
 
@@ -121,30 +166,159 @@ function MarketplacePage() {
 
   };
 
-  const handleAccept = async (
-    requestId: string
-  ) => {
+const handleInterested = async (
+  request: ServiceRequest
+) => {
 
-    try {
+  try {
 
-      await acceptRequest(requestId);
-
-      toast.success(
-        "Request accepted successfully"
+    const interest =
+      await expressInterest(
+        request.requestId
       );
 
-      await loadMarketplace();
+    setInterestId(
+      interest.interestId
+    );
 
-    } catch (error: any) {
+    setSelectedInterestRequest(
+      request
+    );
 
-      toast.error(
-        error?.response?.data?.message ??
-          "Unable to accept request"
+    setInterestDialogOpen(true);
+
+} catch (error: any) {
+
+  const message = error?.response?.data?.message;
+
+  const normalizedMessage =
+    typeof message === "string"
+      ? message.toLowerCase()
+      : "";
+
+  const fundingUnavailable =
+    normalizedMessage.includes("insufficient available blt") ||
+    normalizedMessage.includes("requester does not have a wallet");
+
+  if (fundingUnavailable) {
+
+    const markIneligible = (
+      requests: ServiceRequest[]
+    ): ServiceRequest[] =>
+      requests.map((item) =>
+        item.requestId === request.requestId
+          ? {
+              ...item,
+              requesterHasSufficientTokens: false,
+            }
+          : item
       );
 
-    }
+    setOpenRequests(markIneligible);
+    setMyRequests(markIneligible);
+    setRecommendedRequests(markIneligible);
 
-  };
+    setSelectedRequest((current) =>
+      current?.requestId === request.requestId
+        ? {
+            ...current,
+            requesterHasSufficientTokens: false,
+          }
+        : current
+    );
+
+    setSelectedProvidersRequest((current) =>
+      current?.requestId === request.requestId
+        ? {
+            ...current,
+            requesterHasSufficientTokens: false,
+          }
+        : current
+    );
+
+  }
+
+  toast.error(
+    message ?? "Unable to express interest."
+  );
+
+}
+
+};
+
+const handleChat = async () => {
+
+  if (!interestId) {
+
+    toast.error(
+      "Interest not found."
+    );
+
+    return;
+
+  }
+
+  try {
+
+    const negotiation =
+      await openNegotiation(
+        interestId
+      );
+
+    setInterestDialogOpen(false);
+
+    navigate(
+      `/dashboard/negotiations/${negotiation.negotiationId}`
+    );
+
+  } catch (error: any) {
+
+    toast.error(
+
+      error?.response?.data?.message ??
+
+      "Unable to start conversation."
+
+    );
+
+  }
+
+};
+
+const handleDirectInterest = () => {
+
+  toast.success(
+    "Interest sent successfully."
+  );
+
+  setInterestDialogOpen(false);
+
+};
+
+const handleViewDetails = (
+  request: ServiceRequest
+) => {
+
+  setSelectedRequest(request);
+
+  setDetailsOpen(true);
+
+};
+
+
+const handleViewInterests = (
+  request: ServiceRequest
+) => {
+
+  setSelectedProvidersRequest(
+    request
+  );
+
+  setProvidersDialogOpen(
+    true
+  );
+
+};
 
   const handleCancel = async (
     requestId: string
@@ -171,28 +345,69 @@ function MarketplacePage() {
 
   };
 
-  const requests = useMemo(() => {
 
-    switch (activeTab) {
+  const handleStartNegotiation = async (
+  interestId: string
+) => {
 
-      case "my":
-        return myRequests;
+  try {
 
-      case "assigned":
-        return assignedRequests;
+        const negotiation =
+          await openNegotiation(
+            interestId
+          );
 
-      default:
-        return openRequests;
+        toast.success(
+          "Conversation started."
+        );
 
-    }
+        setProvidersDialogOpen(
+          false
+        );
 
-  }, [
-    activeTab,
-    openRequests,
-    myRequests,
-    assignedRequests,
-  ]);
+        // Later we'll use this ID
+        console.log(
+          negotiation.negotiationId
+        );
 
+        navigate(
+
+          `/dashboard/negotiations/${negotiation.negotiationId}`
+
+        );
+
+  } catch (error: any) {
+
+    toast.error(
+      error?.response?.data?.message ??
+      "Unable to start conversation."
+    );
+
+  }
+
+};
+
+const requests = useMemo(() => {
+
+  switch (activeTab) {
+
+    case "my":
+      return myRequests;
+
+    case "recommended":
+      return recommendedRequests;
+
+    default:
+      return openRequests;
+
+  }
+
+}, [
+  activeTab,
+  openRequests,
+  myRequests,
+  recommendedRequests,
+]);
   return (
 
     <div className="space-y-8">
@@ -270,6 +485,7 @@ function MarketplacePage() {
 
 
 
+
       {/* Tabs */}
 
       <div className="flex flex-wrap gap-3">
@@ -307,20 +523,21 @@ function MarketplacePage() {
         </Button>
 
         <Button
-          variant={
-            activeTab === "assigned"
-              ? "default"
-              : "outline"
-          }
-          onClick={() =>
-            setActiveTab("assigned")
-          }
-        >
-          Assigned
-          <span className="ml-2 rounded-full bg-background/20 px-2 py-0.5 text-xs">
-            {assignedRequests.length}
-          </span>
-        </Button>
+  variant={
+    activeTab === "recommended"
+      ? "default"
+      : "outline"
+  }
+  onClick={() =>
+    setActiveTab("recommended")
+  }
+>
+  ⭐ Recommended
+
+  <span className="ml-2 rounded-full bg-background/20 px-2 py-0.5 text-xs">
+    {recommendedRequests.length}
+  </span>
+</Button>
 
       </div>
 
@@ -341,6 +558,8 @@ function MarketplacePage() {
               </p>
 
             </div>
+
+            
 
           </CardContent>
 
@@ -393,31 +612,69 @@ function MarketplacePage() {
 
       ) : (
 
-        <div className="grid gap-6">
+        <div
+  className="
+    grid
+    grid-cols-1
+    md:grid-cols-2
+    xl:grid-cols-3
+    gap-6
+    items-start
+  "
+>
 
-          {requests.map((request) => (
+{requests.map((request) => (
 
-            <MarketplaceCard
-              key={request.requestId}
-              request={request}
-                showAcceptButton={
-                activeTab === "open" &&
-                request.requesterId !== user?.id
-                }
-              showCancelButton={
-                activeTab === "my"
-              }
-              onAccept={handleAccept}
-              onCancel={handleCancel}
-            />
+  <MarketplaceCard
+    key={request.requestId}
+    request={request}
+      showInterestedButton={
+        activeTab === "open" &&
+        request.requesterId !== user?.id
+      }
+    showCancelButton={
+      activeTab === "my"
+    }
+    onInterested={handleInterested}
+    onCancel={handleCancel}
+    onViewDetails={handleViewDetails}
+    onViewInterests={handleViewInterests}
+  />
 
-          ))}
+))}
 
         </div>
+        
 
       )}
 
+<RequestDetailsDialog
+  open={detailsOpen}
+  onOpenChange={setDetailsOpen}
+  request={selectedRequest}
+  onInterested={handleInterested}
+/>
+
+<InterestActionDialog
+  open={interestDialogOpen}
+  onOpenChange={setInterestDialogOpen}
+  request={selectedInterestRequest}
+  onChat={handleChat}
+  onDirectInterest={handleDirectInterest}
+/>
+
+
+<InterestedProvidersDialog
+  open={providersDialogOpen}
+  onOpenChange={setProvidersDialogOpen}
+  request={selectedProvidersRequest}
+  onStartNegotiation={handleStartNegotiation}
+/>
+
+
     </div>
+
+    
 
   );
 }

@@ -11,21 +11,26 @@ import {
   ArrowRight,
   ShieldCheck,
   CheckCircle2Icon,
+  Gift,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { registerUser } from "@/services/AuthService";
-import { NavLink, useNavigate } from "react-router";
+import { NavLink, useNavigate, useSearchParams } from "react-router";
 import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import OAuth2Buttons from "@/components/OAuth2Buttons";
 
 function Signup() {
 
-  const [data, setData] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
+const [searchParams] = useSearchParams();
+
+const [data, setData] = useState(() => ({
+  name: "",
+  email: "",
+  password: "",
+  referrerCode:
+    searchParams.get("referrerCode")?.trim() ?? "",
+}));
 
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -79,49 +84,65 @@ function Signup() {
 
     try {
       setLoading(true);
-     const result = await registerUser(data);
+     const result = await registerUser({
+  ...data,
+  name: data.name.trim(),
+  email: data.email.trim(),
+  referrerCode: data.referrerCode.trim() || undefined,
+});
       console.log("Signup successful:", result);
       toast.success("Signup successful! Please login to continue.");
       setData({
-        name: "",
-        email: "",
-        password: "",
-      });
+  name: "",
+  email: "",
+  password: "",
+  referrerCode: "",
+});
 
       //navigate to login page after successful signup
       navigate("/login");
-    } catch (error:any) 
-      {
+       } catch (error: unknown) {
+      const apiError = error as {
+        response?: {
+          status?: number;
+          data?: {
+            message?: string;
+          };
+        };
+        message?: string;
+      };
 
-        // if(error.response?.data){
-        //   toast.error(error.response.data);
-        // }
-        // else{
-        //   toast.error("Something went wrong. Please try again later.");
-        // }
+      const status = apiError.response?.status;
 
- if(error?.status === 400){
-          setError(error);
-        }
-        else if(error?.status === 401){
-          setError(error);
-        }
-        else{
-          setError({
-            response: {
-              data: {
-                message: "An unexpected error occurred. Please try again later."
-              }
-            }
-          });
-        }
+      const message =
+        apiError.response?.data?.message ??
+        apiError.message ??
+        "Registration failed. Please try again.";
 
-      }
+      console.error("Registration failed:", {
+        status,
+        message,
+        error,
+      });
+
+      setError({
+        response: {
+          data: {
+            message,
+          },
+        },
+      });}
       finally {
         setLoading(false);
       }
 
     };
+
+    const signInPath = data.referrerCode.trim()
+  ? `/login?referrerCode=${encodeURIComponent(
+      data.referrerCode.trim()
+    )}`
+  : "/login";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-white text-black dark:bg-black dark:text-white transition-colors duration-500 flex items-center justify-center px-6 py-10">
@@ -168,12 +189,12 @@ function Signup() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-400 mb-6">
             <Sparkles className="h-4 w-4" />
-            Join the BarterLink Community
+            Join the SkillFusion Community
           </div>
 
           {/* Heading */}
           <h1 className="text-4xl md:text-5xl font-black leading-tight">
-            Join BarterLink
+            Join SkillFusion
           </h1>
 
           {/* Subheading */}
@@ -254,6 +275,31 @@ function Signup() {
                 />
               </div>
             </div>
+
+            {/* Optional Referral Code */}
+<div className="space-y-2">
+  <label className="text-sm text-gray-700 dark:text-gray-300">
+    Referral Code (Optional)
+  </label>
+
+  <div className="relative">
+    <Gift className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-cyan-400" />
+
+    <Input
+      type="text"
+      placeholder="Enter your friend's referral code"
+      className="h-14 pl-12 rounded-2xl border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 backdrop-blur-xl focus-visible:ring-cyan-400 text-base uppercase"
+      name="referrerCode"
+      value={data.referrerCode}
+      onChange={handleInputChange}
+      autoComplete="off"
+    />
+  </div>
+
+  <p className="text-xs text-gray-500 dark:text-gray-400">
+    A referral code can only be applied when the account is created.
+  </p>
+</div>
 
             {/* Password */}
             <div className="space-y-2">
@@ -347,12 +393,12 @@ function Signup() {
             </div>
 
             {/* Social Buttons */}
-            <OAuth2Buttons/>
+            <OAuth2Buttons referrerCode={data.referrerCode} />
 
             {/* Footer Text */}
             <p className="text-center text-sm text-gray-600 dark:text-gray-400 pt-4">
               Already have an account?{" "}
-               <NavLink to={"/login"} className={"block"}> 
+              <NavLink to={signInPath} className={"block"}>
               <span   className="text-cyan-400 hover:text-cyan-300 cursor-pointer transition">
                 Sign In
               </span>

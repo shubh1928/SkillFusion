@@ -685,11 +685,7 @@ return (
                     </h3>
 
                     <p className="mt-1 text-sm text-muted-foreground">
-
-                      {request.selectedProviderName
-                        ? `Provider: ${request.selectedProviderName}`
-                        : "Waiting for provider"}
-
+                      Mode: {request.exchangeMode.replace(/_/g, " ")}
                     </p>
 
                   <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
@@ -703,7 +699,11 @@ return (
                     </span>
 
                     <span>
-                      {request.tokenCost} Tokens
+                      {request.exchangeMode === "DIRECT_BARTER"
+  ? "Direct barter"
+  : request.tokenAmount != null
+    ? `${request.tokenAmount} Tokens`
+    : "Token amount not set"} Tokens
                     </span>
 
                   </div>
@@ -929,11 +929,26 @@ return (
 
           [...(dashboard?.providerAgreements ?? []), ...(dashboard?.requesterAgreements ?? [])]
 
-            .sort(
-              (a,b)=>
-                new Date(b.acceptedAt).getTime()-
-                new Date(a.acceptedAt).getTime()
-            )
+            .sort((a, b) => {
+  const aTime = a.acceptedAt
+    ? Date.parse(a.acceptedAt)
+    : NaN;
+
+  const bTime = b.acceptedAt
+    ? Date.parse(b.acceptedAt)
+    : NaN;
+
+  const aValid = Number.isFinite(aTime);
+  const bValid = Number.isFinite(bTime);
+
+  // Keep missing or invalid dates at the end.
+  if (!aValid && !bValid) return 0;
+  if (!aValid) return 1;
+  if (!bValid) return -1;
+
+  // Newest accepted agreements first.
+  return bTime - aTime;
+})
 
             .slice(0,4)
 

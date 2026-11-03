@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 
 import {
-  getProviderRatings,
-  getProviderReputation,
+  getUserRatings,
+  getUserReputation,
 } from "@/services/RatingService";
 
 import type Rating from "@/models/ratings/Rating";
@@ -56,39 +56,23 @@ function RatingsPage() {
 
       setLoading(true);
 
-      const [
+        const [
 
-        providerRatings,
+          userRatings,
 
-        providerReputation,
+          userReputation,
 
-      ] = await Promise.all([
+        ] = await Promise.all([
 
-        getProviderRatings(
+          getUserRatings(user.id),
 
-          user.id
+          getUserReputation(user.id),
 
-        ),
+        ]);
 
-        getProviderReputation(
+      setRatings(userRatings);
 
-          user.id
-
-        ),
-
-      ]);
-
-      setRatings(
-
-        providerRatings
-
-      );
-
-      setReputation(
-
-        providerReputation
-
-      );
+      setReputation(userReputation);
 
     } catch (error: any) {
 

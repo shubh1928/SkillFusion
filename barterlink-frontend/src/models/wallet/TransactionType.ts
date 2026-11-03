@@ -12,6 +12,8 @@ enum TransactionType {
 
   REFUNDED = "REFUNDED",
 
+  REWARD = "REWARD",
+
 }
 
 export default TransactionType;
