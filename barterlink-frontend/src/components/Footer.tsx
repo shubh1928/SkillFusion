@@ -1,4 +1,4 @@
-import { Github, Linkedin, Heart } from "lucide-react";
+import { Github, Heart } from "lucide-react";
 
 function Footer() {
   return (
@@ -23,14 +23,14 @@ function Footer() {
               text-primary-foreground
             "
           >
-            B
+            SF
           </div>
 
           <div>
 
             <h2 className="font-semibold">
 
-              BarterLink
+              SkillFusion
 
             </h2>
 
@@ -75,11 +75,11 @@ function Footer() {
 
         <div className="flex items-center gap-3">
 
-          <button className="transition-colors hover:text-primary">
-
-            <Github size={18} />
-
-          </button>
+<a href="https://github.com/shubh1928/Barterlink" target="_blank" rel="noopener noreferrer">
+  <button className="transition-colors hover:text-primary"> 
+    <Github size={18} /> 
+  </button>
+</a>
 
         </div>
 
@@ -91,7 +91,7 @@ function Footer() {
 
           <span>
 
-            © 2026 BarterLink. All rights reserved.
+            © 2026 SkillFusion. All rights reserved.
 
           </span>
 

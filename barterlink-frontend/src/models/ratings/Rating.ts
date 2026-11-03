@@ -2,15 +2,17 @@ export default interface Rating {
 
   ratingId: string;
 
-  agreementId: string;
+  sessionId: string;
 
-  providerId: string;
+  ratedById: string;
 
-  providerName: string;
+  ratedByName: string;
 
-  reviewerId: string;
+  ratedUserId: string;
 
-  reviewerName: string;
+  ratedUserName: string;
+
+  ratingType: string;
 
   stars: number;
 
@@ -19,4 +21,3 @@ export default interface Rating {
   createdAt: string;
 
 }
-

@@ -12,6 +12,11 @@ import {
   User,
   LogOut,
   PanelLeft,
+  MessageCircleMore,
+  Vote,
+  Gift,
+  Scale,
+  CircleDollarSign,
 } from "lucide-react";
 
 import useAuth from "@/auth/store";
@@ -46,6 +51,11 @@ function Sidebar({
       path: "/dashboard/marketplace",
     },
     {
+      title: "Negotiations",
+      icon: MessageCircleMore,
+      path: "/dashboard/negotiations",
+    },
+    {
       title: "Agreements",
       icon: FileText,
       path: "/dashboard/agreements",
@@ -56,15 +66,35 @@ function Sidebar({
       path: "/dashboard/sessions",
     },
     {
+  title: "Governance",
+  icon: Vote,
+  path: "/dashboard/governance",
+},
+{
+  title: "My Disputes",
+  icon: Scale,
+  path: "/dashboard/my-disputes",
+},
+    {
       title: "Wallet",
       icon: Wallet,
       path: "/dashboard/wallet",
     },
-    {
-      title: "Skills",
-      icon: Wrench,
-      path: "/dashboard/skills",
-    },
+   {
+  title: "Refer & Earn",
+  icon: Gift,
+  path: "/dashboard/referrals",
+},
+{
+  title: "SkillFusion Hub",
+  icon: CircleDollarSign,
+  path: "/dashboard/profit-ideas",
+},
+{
+  title: "Skills",
+  icon: Wrench,
+  path: "/dashboard/skills",
+},
     {
       title: "Ratings",
       icon: Star,
@@ -136,13 +166,13 @@ sidebarOpen
     
 
     <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-lg">
-      B
+      SF
     </div>
 
     <div>
 
       <h1 className="text-lg font-bold">
-        BarterLink
+        SkillFusion
       </h1>
 
       <p className="text-xs text-muted-foreground">
@@ -197,7 +227,7 @@ sidebarOpen
       group-hover:scale-75
     "
   >
-    B
+    SF
   </span>
   
 
@@ -364,9 +394,9 @@ sidebarOpen && (
               ? "w-full justify-start gap-3"
               : "mx-auto h-12 w-12 rounded-xl p-0"
           }
-          onClick={() => {
-            logout();
-            navigate("/");
+          onClick={async () => {
+              await logout();
+              navigate("/");
           }}
         >
 

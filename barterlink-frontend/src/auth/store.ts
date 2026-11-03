@@ -1,5 +1,5 @@
-import type LoginData from "@/models/LoginData";
-import type LoginResponseData from "@/models/LoginResponseData";
+import type LoginData from "@/models/auth/LoginData";
+import type LoginResponseData from "@/models/auth/LoginResponseData";
 import type User from "@/models/User";
 import { loginUser, logoutUser } from "@/services/AuthService";
 import { toast } from "react-hot-toast";
@@ -18,7 +18,7 @@ type AuthState = {
     authLoading: boolean;
 
     login: (LoginData: LoginData) => Promise<LoginResponseData>;
-    logout: (silent?: boolean) => void;
+    logout: () => Promise<void>;
 
     checkLogin: () => boolean | undefined;
 

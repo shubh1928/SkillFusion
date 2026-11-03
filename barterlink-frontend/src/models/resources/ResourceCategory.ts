@@ -1,0 +1,23 @@
+enum ResourceCategory {
+
+  STUDY_MATERIAL = "STUDY_MATERIAL",
+
+  DOCUMENTATION = "DOCUMENTATION",
+
+  PROJECT = "PROJECT",
+
+  SOURCE_CODE = "SOURCE_CODE",
+
+  RESEARCH_PAPER = "RESEARCH_PAPER",
+
+  TEMPLATE = "TEMPLATE",
+
+  TUTORIAL = "TUTORIAL",
+
+  PORTFOLIO = "PORTFOLIO",
+
+  OTHER = "OTHER",
+
+}
+
+export default ResourceCategory;

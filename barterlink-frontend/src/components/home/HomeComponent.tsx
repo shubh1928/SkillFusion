@@ -122,7 +122,7 @@ function HomeComponent() {
 
             <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
 
-              BarterLink is a modern platform where people exchange
+              SkillFusion is a modern platform where people exchange
               skills instead of money. Connect with experts, create
               secure agreements, complete sessions, earn reputation,
               and grow together as a community.
@@ -335,7 +335,7 @@ function HomeComponent() {
 
           <p className="mx-auto mt-4 max-w-3xl text-muted-foreground">
 
-            BarterLink brings together learning, collaboration,
+            SkillFusion brings together learning, collaboration,
             secure agreements, wallet management and community
             reputation into one modern platform.
 
@@ -590,7 +590,7 @@ function HomeComponent() {
 
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">
 
-            Join BarterLink today and become part of a growing
+            Join SkillFusion today and become part of a growing
             community where knowledge is the most valuable currency.
 
           </p>

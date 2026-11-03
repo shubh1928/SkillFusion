@@ -1,10 +1,9 @@
 export default interface CreateRating {
 
-  agreementId: string;
+  sessionId: string;
 
   stars: number;
 
   review: string;
 
 }
-

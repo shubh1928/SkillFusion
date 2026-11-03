@@ -88,14 +88,14 @@ const toggleTheme = () => {
             shadow-lg
           "
         >
-          B
+          SF
         </div>
 
         <div>
 
           <h1 className="text-lg font-bold">
 
-            BarterLink
+            SkillFusion
 
           </h1>
 
@@ -156,13 +156,10 @@ const toggleTheme = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-
-                logout();
-
-                navigate("/");
-
-              }}
+              onClick={async () => {
+                    await logout();
+                    navigate("/");
+                }}
             >
 
               Logout

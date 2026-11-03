@@ -41,7 +41,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     console.log(error)
-    const is401 = error.response.status === 401;
+    const is401 = error.response?.status === 401;
     const original = error.config;
 
     if (!is401 || original._retry) {
