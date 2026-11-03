@@ -1,5 +1,5 @@
 import apiClient from "@/config/ApiClient";
-
+import type AgreementVersion from "@/models/agreement/AgreementVersion";
 import type Agreement from "@/models/agreement/Agreement";
 
 /**
@@ -45,3 +45,18 @@ export const getAgreement =
     return response.data.data;
 
   };
+
+
+  /**
+ * Get version history for a negotiation.
+ * The backend returns the versions newest first.
+ */
+export const getAgreementVersions = async (
+  negotiationId: string,
+): Promise<AgreementVersion[]> => {
+  const response = await apiClient.get(
+    `/negotiations/${negotiationId}/versions`,
+  );
+
+  return response.data.data;
+};

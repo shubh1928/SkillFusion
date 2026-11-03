@@ -19,33 +19,48 @@ export const submitRating =
     return response.data.data;
 
   };
+  
 
-/**
- * Get all ratings for a provider
- */
-export const getProviderRatings =
+export const getUserRatings =
   async (
-    providerId: string
+    userId: string
   ): Promise<Rating[]> => {
 
     const response = await apiClient.get(
-      `/ratings/provider/${providerId}`
+      `/ratings/user/${userId}`
     );
 
     return response.data.data;
 
   };
 
-/**
- * Get provider reputation
- */
-export const getProviderReputation =
+
+
+export const getUserReputation =
   async (
-    providerId: string
+    userId: string
   ): Promise<number> => {
 
     const response = await apiClient.get(
-      `/ratings/provider/${providerId}/reputation`
+      `/ratings/user/${userId}/reputation`
+    );
+
+    return response.data.data;
+
+  };
+
+
+/**
+ * Check whether the current user has
+ * already rated a session.
+ */
+export const hasCurrentUserRated =
+  async (
+    sessionId: string
+  ): Promise<boolean> => {
+
+    const response = await apiClient.get(
+      `/ratings/session/${sessionId}/status`
     );
 
     return response.data.data;

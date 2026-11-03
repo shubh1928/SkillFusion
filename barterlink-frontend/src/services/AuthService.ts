@@ -1,15 +1,21 @@
 import type RegisertData from "@/models/RegisterData";
 import apiClient from "@/config/ApiClient";
-import type LoginData from "@/models/LoginData";
-import type LoginResponseData from "@/models/LoginResponseData";
+import type LoginData from "@/models/auth/LoginData";
+import type LoginResponseData from "@/models/auth/LoginResponseData";
 import type User from "@/models/User";
 
 //register function 
 export const registerUser = async (signupData: RegisertData) => {
-    //api call to server to register user
-    const response = await apiClient.post("/auth/register", signupData);
+    const response = await apiClient.post(
+        "/auth/register",
+        signupData,
+        {
+            timeout: 90000, // 90 seconds for blockchain wallet initialization
+        }
+    );
+
     return response.data;
-}
+};
 
 //login function
 export const loginUser = async (loginData: LoginData) =>  {

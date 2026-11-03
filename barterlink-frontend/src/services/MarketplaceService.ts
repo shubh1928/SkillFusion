@@ -1,10 +1,13 @@
 import apiClient from "@/config/ApiClient";
 
-import type CreateServiceRequest from "@/models/marketplace/CreateServiceRequest";
-import type ServiceRequest from "@/models/marketplace/ServiceRequest";
+import type CreateServiceRequest
+from "@/models/marketplace/CreateServiceRequest";
+
+import type ServiceRequest
+from "@/models/marketplace/ServiceRequest";
 
 /**
- * Create a new marketplace request
+ * Create Marketplace Request
  */
 export const createRequest = async (
   request: CreateServiceRequest
@@ -16,22 +19,25 @@ export const createRequest = async (
   );
 
   return response.data.data;
+
 };
 
 /**
  * Get all open marketplace requests
  */
-export const getOpenRequests = async (): Promise<ServiceRequest[]> => {
+export const getOpenRequests = async (
+): Promise<ServiceRequest[]> => {
 
   const response = await apiClient.get(
     "/marketplace/requests"
   );
 
   return response.data.data;
+
 };
 
 /**
- * Get a marketplace request by id
+ * Get marketplace request by id
  */
 export const getRequestById = async (
   requestId: string
@@ -42,48 +48,25 @@ export const getRequestById = async (
   );
 
   return response.data.data;
+
 };
 
 /**
- * Get current user's requests
+ * Get my posted requests
  */
-export const getMyRequests = async (): Promise<ServiceRequest[]> => {
+export const getMyRequests = async (
+): Promise<ServiceRequest[]> => {
 
   const response = await apiClient.get(
     "/marketplace/requests/my"
   );
 
   return response.data.data;
+
 };
 
 /**
- * Get requests assigned to current user
- */
-export const getAssignedRequests = async (): Promise<ServiceRequest[]> => {
-
-  const response = await apiClient.get(
-    "/marketplace/requests/assigned"
-  );
-
-  return response.data.data;
-};
-
-/**
- * Accept a marketplace request
- */
-export const acceptRequest = async (
-  requestId: string
-): Promise<ServiceRequest> => {
-
-  const response = await apiClient.post(
-    `/marketplace/requests/${requestId}/accept`
-  );
-
-  return response.data.data;
-};
-
-/**
- * Cancel a marketplace request
+ * Cancel my marketplace request
  */
 export const cancelRequest = async (
   requestId: string
@@ -92,4 +75,6 @@ export const cancelRequest = async (
   await apiClient.post(
     `/marketplace/requests/${requestId}/cancel`
   );
+
 };
+
