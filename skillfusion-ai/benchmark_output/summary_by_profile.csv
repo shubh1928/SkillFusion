@@ -1,0 +1,11 @@
+﻿profile_id,profile_source,method,mean_latency_ms,precision_at_5_percent,relevant_in_top5,returned_recommendations
+P01,Actual,Keyword baseline,0.1638,80.0,4,5
+P01,Actual,Skill Fusion semantic,210.5525,60.0,3,3
+P02,Actual,Keyword baseline,0.1856,80.0,4,5
+P02,Actual,Skill Fusion semantic,191.208,60.0,3,5
+P03,Actual,Keyword baseline,0.1628,80.0,4,5
+P03,Actual,Skill Fusion semantic,189.8578,60.0,3,4
+P04,Actual,Keyword baseline,0.1928,80.0,4,5
+P04,Actual,Skill Fusion semantic,186.5039,80.0,4,5
+P05,Actual,Keyword baseline,0.2086,20.0,1,5
+P05,Actual,Skill Fusion semantic,203.1477,20.0,1,1
