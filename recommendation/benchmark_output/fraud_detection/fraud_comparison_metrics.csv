@@ -1,3 +1,0 @@
-Method,Test Profiles,TN,FP,FN,TP,Accuracy (%),Precision (%),Recall (%),F1-score (%),False Positive Rate (%)
-Majority-class baseline,2000,1897,0,103,0,94.85,0.0,0.0,0.0,0.0
-Skill Fusion Isolation Forest,2000,1897,0,2,101,99.9,100.0,98.06,99.02,0.0

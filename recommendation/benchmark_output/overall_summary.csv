@@ -1,3 +1,0 @@
-﻿method,profiles_tested,requests_in_candidate_set,average_precision_at_5_percent,mean_matching_time_ms,note
-Keyword baseline,5,13,68.0,0.1827,Includes actual and synthetic requests; relevance labels require human review. Timing excludes model loading.
-Skill Fusion semantic,5,13,56.0,196.254,Includes actual and synthetic requests; relevance labels require human review. Timing excludes model loading.
