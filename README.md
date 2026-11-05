@@ -1,4 +1,4 @@
-# SkillFusion – AI-Powered Skill Exchange Platform
+# SkillFusion - AI-Powered Skill Exchange Platform
 
 **Learn. Teach. Grow Together.**
 
